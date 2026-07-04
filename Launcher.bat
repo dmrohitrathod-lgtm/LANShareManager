@@ -4,97 +4,144 @@ title LANShare Manager v1.0
 
 :: ==========================================================
 :: LANShare Manager
-:: Version : 0.1
-:: Author  : Mango Creatif
+:: Version : 1.0
+:: Target  : Windows 10
 :: ==========================================================
 
 cd /d "%~dp0"
 
-:: ----------------------------
-:: Admin Check
-:: ----------------------------
+:: ----------------------------------------------------------
+:: Administrator Check
+:: ----------------------------------------------------------
+
 net session >nul 2>&1
-if %errorlevel% neq 0 (
+
+if NOT "%errorlevel%"=="0" (
+
     echo.
-    echo ==========================================
-    echo      Administrator permission required
-    echo ==========================================
+    echo ================================================
     echo.
-    powershell -NoProfile -Command ^
-    "Start-Process -FilePath '%~f0' -Verb RunAs"
+    echo   Restarting As Administrator...
+    echo.
+    echo ================================================
+    echo.
+
+    powershell -NoProfile -ExecutionPolicy Bypass ^
+    -Command "Start-Process -FilePath '%~f0' -Verb RunAs"
+
     exit /b
+
 )
 
-:: ----------------------------
+:: ----------------------------------------------------------
+:: Windows Check
+:: ----------------------------------------------------------
+
+ver | find "10." >nul
+
+if errorlevel 1 (
+
+    cls
+
+    echo.
+    echo ================================================
+    echo.
+    echo This Utility Supports Windows 10 Only.
+    echo.
+    echo ================================================
+    echo.
+
+    pause
+
+    exit
+
+)
+
+:: ----------------------------------------------------------
 :: PowerShell Check
-:: ----------------------------
+:: ----------------------------------------------------------
+
 where powershell.exe >nul 2>&1
 
 if errorlevel 1 (
+
     cls
+
     echo.
-    echo PowerShell not found.
+    echo Windows PowerShell Not Found.
+    echo.
+
     pause
-    exit /b
+
+    exit
+
 )
 
-:: ----------------------------
-:: Create Project Folder
-:: ----------------------------
-if not exist "Logs" mkdir "Logs"
-if not exist "Config" mkdir "Config"
-if not exist "Core" mkdir "Core"
+:: ----------------------------------------------------------
+:: Create Folders
+:: ----------------------------------------------------------
 
-:: ----------------------------
-:: Create Config if Missing
-:: ----------------------------
+if not exist "Logs" mkdir Logs
+
+if not exist "Config" mkdir Config
+
+:: ----------------------------------------------------------
+:: Create Config File
+:: ----------------------------------------------------------
+
 if not exist "Config\Config.json" (
+
 (
 echo {
-echo     "Version":"0.1",
-echo     "FirstRun":true,
-echo     "LogEnabled":true
+echo     "Version":"1.0",
+echo     "Mode":"Official",
+echo     "Logging":true
 echo }
 )>Config\Config.json
+
 )
 
-:: ----------------------------
+:: ----------------------------------------------------------
 :: Log
-:: ----------------------------
-echo ==================================================>>Logs\Launcher.log
-echo %date% %time% Launcher Started>>Logs\Launcher.log
+:: ----------------------------------------------------------
 
-:: ----------------------------
-:: Main PowerShell
-:: ----------------------------
-if not exist "Core\Main.ps1" (
+echo ======================================================>>Logs\LANShare.log
+echo %date% %time% Launcher Started>>Logs\LANShare.log
+
+:: ----------------------------------------------------------
+:: Check Main Script
+:: ----------------------------------------------------------
+
+if not exist "LANShareManager.ps1" (
 
     cls
 
     echo.
-    echo ==========================================
-    echo Main.ps1 not found.
+    echo ================================================
     echo.
-    echo Please verify installation.
-    echo ==========================================
+    echo LANShareManager.ps1 Not Found
+    echo.
+    echo ================================================
     echo.
 
     pause
 
-    exit /b
+    exit
+
 )
 
-:: ----------------------------
-:: Execute
-:: ----------------------------
+:: ----------------------------------------------------------
+:: Start PowerShell
+:: ----------------------------------------------------------
+
 powershell.exe ^
 -NoLogo ^
 -NoProfile ^
 -ExecutionPolicy Bypass ^
--File "Core\Main.ps1"
+-File "%~dp0LANShareManager.ps1"
 
-set ERR=%errorlevel%
+set EXITCODE=%errorlevel%
 
-echo Exit Code : %ERR%>>Logs\Launcher.log
+echo Exit Code : %EXITCODE%>>Logs\LANShare.log
 
-exit /b
+exit
